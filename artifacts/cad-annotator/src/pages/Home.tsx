@@ -1,14 +1,12 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef } from "react";
 import { useAnalyzeDrawing } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload, X, Eye, EyeOff, Loader2, ChevronDown, ChevronRight, Crosshair, ZoomIn, FileText } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Upload, X, Loader2, ImageIcon, Layers } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Annotation, AnalyzeDrawingResult } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { AnalyzeDrawingResult } from "@workspace/api-client-react/src/generated/api.schemas";
 
 export default function Home() {
   const { toast } = useToast();
@@ -20,12 +18,10 @@ export default function Home() {
   const [baselineMode, setBaselineMode] = useState(false);
   const [showBoxes, setShowBoxes] = useState(true);
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
-  const [annotationsOpen, setAnnotationsOpen] = useState(true);
   
   const [analysisResult, setAnalysisResult] = useState<AnalyzeDrawingResult | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const analyzeDrawing = useAnalyzeDrawing();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,251 +110,237 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col font-sans">
-      <header className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-slate-900 dark:text-slate-50">
-          <Crosshair className="w-6 h-6 text-blue-600" />
-          <h1 className="text-xl font-semibold tracking-tight">AeroInspect CAD Review</h1>
-        </div>
-        <div className="text-sm font-mono text-slate-500">
-          STATUS: {analyzeDrawing.isPending ? "PROCESSING" : "READY"}
+    <div className="min-h-[100dvh] bg-background flex flex-col font-sans selection:bg-primary/10">
+      <header className="px-8 py-6 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-transparent transition-colors">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Layers className="w-4 h-4 text-primary" />
+          </div>
+          <h1 className="text-lg font-medium tracking-tight text-foreground">CAD Annotator</h1>
         </div>
       </header>
 
-      <main className="flex-1 p-6 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
+      <main className="flex-1 px-8 pb-12 flex flex-col max-w-[1600px] mx-auto w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-12 mt-4">
           
           {/* LEFT PANEL */}
-          <div className="flex flex-col gap-6">
-            <Card className="shadow-sm border-slate-200 dark:border-slate-800">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-medium">Upload Drawing</CardTitle>
-                <CardDescription>Upload CAD blueprint or diagram for automated annotation</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {!imagePreviewUrl ? (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    onDrop={handleDrop}
-                    onDragOver={handleDragOver}
-                    className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
-                  >
-                    <Upload className="w-8 h-8 text-slate-400 mb-4" />
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Click or drag image to upload
-                    </p>
-                    <p className="text-xs text-slate-500">Supports PNG, JPG, WEBP</p>
+          <div className="flex flex-col gap-10">
+            
+            {/* Upload Section */}
+            <section className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-base font-medium">Upload drawing</h2>
+                <p className="text-sm text-muted-foreground">Select a CAD file or blueprint to analyze.</p>
+              </div>
+
+              {!imagePreviewUrl ? (
+                <div
+                  data-testid="upload-dropzone"
+                  onClick={() => fileInputRef.current?.click()}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  className="group relative border border-dashed border-border rounded-2xl p-10 flex flex-col items-center justify-center text-center cursor-pointer bg-muted/30 hover:bg-muted/80 transition-all duration-300"
+                >
+                  <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-300 shadow-sm">
+                    <Upload className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="relative aspect-video rounded-md overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                      <img src={imagePreviewUrl} alt="Preview" className="w-full h-full object-contain" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-mono truncate max-w-[200px] text-slate-600 dark:text-slate-400" title={imageFile?.name}>
+                  <p className="text-sm font-medium text-foreground mb-1">
+                    Click or drag image here
+                  </p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG, or WEBP</p>
+                </div>
+              ) : (
+                <div className="group relative rounded-2xl overflow-hidden bg-muted/30 border border-border">
+                  <div className="aspect-video relative">
+                    <img src={imagePreviewUrl} alt="Preview" className="w-full h-full object-contain p-2" />
+                    <div className="absolute inset-0 bg-background/0 group-hover:bg-background/10 transition-colors duration-200" />
+                  </div>
+                  <div className="p-3 bg-background border-t border-border flex items-center justify-between">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <ImageIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <span className="text-xs font-medium truncate text-foreground" title={imageFile?.name}>
                         {imageFile?.name}
                       </span>
-                      <Button variant="ghost" size="sm" onClick={handleRemoveImage} className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50">
-                        <X className="w-4 h-4 mr-1" />
-                        Remove
-                      </Button>
                     </div>
-                  </div>
-                )}
-                
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  className="hidden"
-                />
-
-                <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="include-description" className="text-sm font-medium cursor-pointer">
-                      Include detailed description
-                    </Label>
-                    <Switch
-                      id="include-description"
-                      checked={includeDescription}
-                      onCheckedChange={setIncludeDescription}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="baseline-mode" className="text-sm font-medium cursor-pointer">
-                      Baseline mode (faster)
-                    </Label>
-                    <Switch
-                      id="baseline-mode"
-                      checked={baselineMode}
-                      onCheckedChange={setBaselineMode}
-                    />
+                    <Button data-testid="button-remove-image" variant="ghost" size="icon" onClick={handleRemoveImage} className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 rounded-full">
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 </div>
+              )}
+              
+              <input
+                data-testid="input-file"
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
+            </section>
 
-                <Button 
-                  onClick={handleGenerate} 
-                  disabled={!imageBase64 || analyzeDrawing.isPending}
-                  className="w-full font-semibold"
-                  size="lg"
-                >
-                  {analyzeDrawing.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Analyzing Drawing...
-                    </>
-                  ) : (
-                    "Generate CAD Drawing"
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Options Section */}
+            <section className="flex flex-col gap-5">
+              <div className="flex flex-col gap-4 p-5 rounded-2xl bg-muted/30 border border-border/50">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="include-description" className="text-sm font-medium cursor-pointer text-foreground">
+                    Detailed descriptions
+                  </Label>
+                  <Switch
+                    data-testid="toggle-include-description"
+                    id="include-description"
+                    checked={includeDescription}
+                    onCheckedChange={setIncludeDescription}
+                  />
+                </div>
+                <div className="h-[1px] w-full bg-border/50" />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="baseline-mode" className="text-sm font-medium cursor-pointer text-foreground">
+                    Fast baseline mode
+                  </Label>
+                  <Switch
+                    data-testid="toggle-baseline-mode"
+                    id="baseline-mode"
+                    checked={baselineMode}
+                    onCheckedChange={setBaselineMode}
+                  />
+                </div>
+              </div>
+
+              <Button 
+                data-testid="button-generate"
+                onClick={handleGenerate} 
+                disabled={!imageBase64 || analyzeDrawing.isPending}
+                className="w-full h-12 text-sm font-medium rounded-xl shadow-sm transition-all"
+              >
+                {analyzeDrawing.isPending ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Analyzing drawing...
+                  </span>
+                ) : (
+                  "Generate Annotations"
+                )}
+              </Button>
+            </section>
+
           </div>
 
           {/* RIGHT PANEL */}
-          <Card className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-[600px] lg:h-auto min-h-[600px]">
-            <CardHeader className="flex flex-row items-center justify-between py-3 px-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-              <div className="flex items-center gap-2">
-                <ZoomIn className="w-4 h-4 text-slate-500" />
-                <CardTitle className="text-sm font-medium">Parsed CAD Drawing</CardTitle>
-              </div>
+          <div className="flex flex-col gap-6 min-w-0">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-medium">Preview</h2>
               {analysisResult && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowBoxes(!showBoxes)}
-                  className="h-8"
-                >
-                  {showBoxes ? (
-                    <><EyeOff className="w-4 h-4 mr-2" /> Hide Boxes</>
-                  ) : (
-                    <><Eye className="w-4 h-4 mr-2" /> Show Boxes</>
-                  )}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="show-boxes" className="text-xs text-muted-foreground cursor-pointer">
+                    Show boxes
+                  </Label>
+                  <Switch
+                    data-testid="toggle-show-boxes"
+                    id="show-boxes"
+                    checked={showBoxes}
+                    onCheckedChange={setShowBoxes}
+                    className="scale-75 data-[state=checked]:bg-primary"
+                  />
+                </div>
               )}
-            </CardHeader>
-            <CardContent className="p-0 flex-1 relative bg-slate-100/50 dark:bg-slate-950 flex flex-col">
+            </div>
+
+            <div className="flex-1 flex flex-col min-h-[600px] bg-muted/20 border border-border rounded-3xl overflow-hidden relative">
               {!imagePreviewUrl ? (
-                <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                  <div className="text-center">
-                    <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                    <p className="text-sm font-medium">No drawing loaded</p>
-                  </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground/50">
+                  <Layers className="w-10 h-10 mb-4 stroke-[1.5]" />
+                  <p className="text-sm">Upload a drawing to see annotations</p>
                 </div>
               ) : (
                 <ScrollArea className="flex-1 h-full w-full">
-                  <div className="min-w-full min-h-full p-4 flex items-center justify-center">
-                    <div className="relative shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 inline-block">
-                      <img src={imagePreviewUrl} alt="Parsed CAD" className="max-w-none w-auto max-h-[800px]" />
+                  <div className="min-w-full min-h-full p-8 flex items-center justify-center">
+                    <div className="relative inline-block">
+                      <img src={imagePreviewUrl} alt="Parsed CAD" className="max-w-none w-auto max-h-[700px] rounded-sm shadow-sm" />
                       
                       {showBoxes && analysisResult?.annotations.map((ann) => (
                         <div
                           key={ann.id}
-                          className={`absolute transition-all duration-200 cursor-pointer ${
+                          data-testid={`box-${ann.id}`}
+                          className={`absolute transition-all duration-300 cursor-pointer rounded-[2px] ${
                             selectedAnnotationId === ann.id 
-                              ? "z-10 ring-2 ring-white ring-offset-2 ring-offset-blue-500 bg-white/10" 
-                              : "z-0 hover:bg-white/10"
+                              ? "z-10 bg-primary/20 backdrop-blur-[1px]" 
+                              : "z-0 hover:bg-foreground/5"
                           }`}
                           style={{
                             left: `${ann.boundingBox.x}%`,
                             top: `${ann.boundingBox.y}%`,
                             width: `${ann.boundingBox.width}%`,
                             height: `${ann.boundingBox.height}%`,
-                            border: `2px solid ${ann.boundingBox.color}`,
+                            border: `1.5px solid ${selectedAnnotationId === ann.id ? ann.boundingBox.color : 'rgba(0,0,0,0.1)'}`,
+                            boxShadow: selectedAnnotationId === ann.id ? `0 0 0 1px ${ann.boundingBox.color} inset, 0 4px 12px rgba(0,0,0,0.1)` : 'none'
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedAnnotationId(ann.id);
-                            // Also expand bottom panel if closed
-                            setAnnotationsOpen(true);
                           }}
-                        >
-                          {selectedAnnotationId === ann.id && (
-                            <div className="absolute -top-6 left-0 bg-slate-900 text-white text-xs font-mono px-2 py-1 rounded whitespace-nowrap shadow-md">
-                              {ann.label}: {ann.value}
-                            </div>
-                          )}
-                        </div>
+                        />
                       ))}
                     </div>
                   </div>
                 </ScrollArea>
               )}
-              
-              {analysisResult?.description && (
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Analysis Description</h4>
-                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+            </div>
+
+            {/* Annotations List */}
+            {analysisResult && (
+              <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-medium">Results</h3>
+                  <span className="text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded-full">
+                    {analysisResult.annotations.length} found
+                  </span>
+                </div>
+                
+                {analysisResult.description && (
+                  <p className="text-sm text-muted-foreground leading-relaxed bg-muted/30 p-4 rounded-2xl border border-border/50">
                     {analysisResult.description}
                   </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                )}
 
-        {/* BOTTOM PANEL */}
-        {analysisResult && (
-          <Collapsible
-            open={annotationsOpen}
-            onOpenChange={setAnnotationsOpen}
-            className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 shadow-sm"
-          >
-            <CollapsibleTrigger asChild>
-              <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold">Annotations ({analysisResult.annotations.length})</h3>
-                  {analysisResult.views.length > 0 && (
-                    <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full font-mono">
-                      {analysisResult.views.length} views
-                    </span>
-                  )}
-                </div>
-                {annotationsOpen ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {analysisResult.annotations.map((ann) => (
-                    <Card 
-                      key={ann.id} 
-                      className={`cursor-pointer transition-all duration-200 border-2 ${
-                        selectedAnnotationId === ann.id 
-                          ? "shadow-md bg-white dark:bg-slate-900 translate-y-[-2px]" 
-                          : "border-transparent hover:border-slate-300 dark:hover:border-slate-700 bg-white/50 dark:bg-slate-900/50"
-                      }`}
-                      style={{
-                        borderColor: selectedAnnotationId === ann.id ? ann.boundingBox.color : undefined
-                      }}
-                      onClick={() => setSelectedAnnotationId(ann.id)}
-                    >
-                      <CardContent className="p-4 flex flex-col gap-2">
-                        <div className="flex justify-between items-start">
-                          <span className="font-semibold text-sm text-slate-900 dark:text-slate-100" style={{ color: selectedAnnotationId === ann.id ? ann.boundingBox.color : undefined }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {analysisResult.annotations.map((ann) => {
+                    const isSelected = selectedAnnotationId === ann.id;
+                    return (
+                      <div 
+                        key={ann.id} 
+                        data-testid={`card-${ann.id}`}
+                        className={`group cursor-pointer transition-all duration-300 border p-4 rounded-2xl flex flex-col gap-2 ${
+                          isSelected 
+                            ? "bg-background shadow-sm border-primary/30 ring-1 ring-primary/30" 
+                            : "bg-muted/20 border-border/60 hover:bg-muted/40 hover:border-border"
+                        }`}
+                        onClick={() => setSelectedAnnotationId(ann.id)}
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <span className={`text-sm font-medium transition-colors ${isSelected ? 'text-primary' : 'text-foreground'}`}>
                             {ann.label}
                           </span>
-                          <span className="text-[10px] font-mono uppercase bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500">
+                          <span className="text-[10px] uppercase tracking-wider bg-background px-1.5 py-0.5 rounded-md text-muted-foreground border border-border/50 shrink-0">
                             {ann.view}
                           </span>
                         </div>
-                        <div className="text-2xl font-mono tracking-tight text-slate-800 dark:text-slate-200">
+                        <div className="text-lg font-mono text-foreground mt-1">
                           {ann.value}
                         </div>
                         {ann.description && (
-                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-auto pt-2">
                             {ann.description}
                           </p>
                         )}
-                      </CardContent>
-                    </Card>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );
