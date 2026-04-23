@@ -14,3 +14,61 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Accepts a base64-encoded image and returns parsed annotations with bounding boxes
+ * @summary Analyze a CAD drawing image
+ */
+export const analyzeDrawingBodyIncludeDescriptionDefault = false;
+export const analyzeDrawingBodyBaselineModeDefault = false;
+
+export const AnalyzeDrawingBody = zod.object({
+  imageData: zod
+    .string()
+    .describe("Base64-encoded image data (with data URI prefix)"),
+  includeDescription: zod
+    .boolean()
+    .default(analyzeDrawingBodyIncludeDescriptionDefault)
+    .describe("Whether to include a natural language description"),
+  baselineMode: zod
+    .boolean()
+    .default(analyzeDrawingBodyBaselineModeDefault)
+    .describe("Whether to use baseline mode (simpler analysis)"),
+});
+
+export const AnalyzeDrawingResponse = zod.object({
+  annotations: zod.array(
+    zod.object({
+      id: zod.string(),
+      label: zod
+        .string()
+        .describe('Short label for the annotation (e.g. \"R3.2 TYP.\")'),
+      value: zod.string().describe("Numeric or text value extracted"),
+      view: zod
+        .string()
+        .describe('Which view this belongs to (e.g. \"View 1\")'),
+      boundingBox: zod.object({
+        x: zod.number().describe("Left position as percentage of image width"),
+        y: zod.number().describe("Top position as percentage of image height"),
+        width: zod.number().describe("Width as percentage of image width"),
+        height: zod.number().describe("Height as percentage of image height"),
+        color: zod
+          .string()
+          .describe(
+            'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+          ),
+      }),
+      description: zod
+        .string()
+        .optional()
+        .describe("Optional detailed description"),
+    }),
+  ),
+  description: zod
+    .string()
+    .optional()
+    .describe("Natural language description of the drawing (if requested)"),
+  views: zod
+    .array(zod.string())
+    .describe("List of detected views in the drawing"),
+});

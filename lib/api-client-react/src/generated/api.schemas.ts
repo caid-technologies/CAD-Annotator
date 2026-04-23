@@ -8,3 +8,51 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface AnalyzeDrawingBody {
+  /** Base64-encoded image data (with data URI prefix) */
+  imageData: string;
+  /** Whether to include a natural language description */
+  includeDescription?: boolean;
+  /** Whether to use baseline mode (simpler analysis) */
+  baselineMode?: boolean;
+}
+
+export interface BoundingBox {
+  /** Left position as percentage of image width */
+  x: number;
+  /** Top position as percentage of image height */
+  y: number;
+  /** Width as percentage of image width */
+  width: number;
+  /** Height as percentage of image height */
+  height: number;
+  /** Color of the bounding box (e.g. "green", "blue", "red") */
+  color: string;
+}
+
+export interface Annotation {
+  id: string;
+  /** Short label for the annotation (e.g. "R3.2 TYP.") */
+  label: string;
+  /** Numeric or text value extracted */
+  value: string;
+  /** Which view this belongs to (e.g. "View 1") */
+  view: string;
+  boundingBox: BoundingBox;
+  /** Optional detailed description */
+  description?: string;
+}
+
+export interface AnalyzeDrawingResult {
+  annotations: Annotation[];
+  /** Natural language description of the drawing (if requested) */
+  description?: string;
+  /** List of detected views in the drawing */
+  views: string[];
+}
+
+export interface ErrorResponse {
+  error: string;
+  message?: string;
+}

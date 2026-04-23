@@ -15,6 +15,19 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
+- **AI**: OpenAI via Replit AI Integrations (no user API key required)
+
+## Artifacts
+
+### AI CAD Annotation & Review (`artifacts/cad-annotator`)
+- React + Vite frontend at `/`
+- Upload CAD drawing images and get AI-powered annotations with bounding boxes
+- Features: drag-and-drop upload, natural language description toggle, baseline mode, annotation cards
+- Uses OpenAI GPT-4 vision model via the analyze endpoint
+
+### API Server (`artifacts/api-server`)
+- Express 5 backend
+- `/api/analyze` — POST endpoint for CAD drawing analysis using OpenAI vision
 
 ## Key Commands
 

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AI CAD Annotation & Review"
+version = "1.0.0"
+id = "artifacts/cad-annotator"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20011
+
+[services.development]
+run = "pnpm --filter @workspace/cad-annotator run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cad-annotator", "run", "build" ]
+publicDir = "artifacts/cad-annotator/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20011"
+BASE_PATH = "/"

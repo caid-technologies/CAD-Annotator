@@ -5,18 +5,26 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  AnalyzeDrawingBody,
+  AnalyzeDrawingResult,
+  ErrorResponse,
+  HealthStatus,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -99,3 +107,90 @@ export function useHealthCheck<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * Accepts a base64-encoded image and returns parsed annotations with bounding boxes
+ * @summary Analyze a CAD drawing image
+ */
+export const getAnalyzeDrawingUrl = () => {
+  return `/api/analyze`;
+};
+
+export const analyzeDrawing = async (
+  analyzeDrawingBody: AnalyzeDrawingBody,
+  options?: RequestInit,
+): Promise<AnalyzeDrawingResult> => {
+  return customFetch<AnalyzeDrawingResult>(getAnalyzeDrawingUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(analyzeDrawingBody),
+  });
+};
+
+export const getAnalyzeDrawingMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeDrawing>>,
+    TError,
+    { data: BodyType<AnalyzeDrawingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof analyzeDrawing>>,
+  TError,
+  { data: BodyType<AnalyzeDrawingBody> },
+  TContext
+> => {
+  const mutationKey = ["analyzeDrawing"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof analyzeDrawing>>,
+    { data: BodyType<AnalyzeDrawingBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return analyzeDrawing(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AnalyzeDrawingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof analyzeDrawing>>
+>;
+export type AnalyzeDrawingMutationBody = BodyType<AnalyzeDrawingBody>;
+export type AnalyzeDrawingMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Analyze a CAD drawing image
+ */
+export const useAnalyzeDrawing = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeDrawing>>,
+    TError,
+    { data: BodyType<AnalyzeDrawingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof analyzeDrawing>>,
+  TError,
+  { data: BodyType<AnalyzeDrawingBody> },
+  TContext
+> => {
+  return useMutation(getAnalyzeDrawingMutationOptions(options));
+};

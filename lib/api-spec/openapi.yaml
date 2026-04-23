@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: annotations
+    description: CAD drawing annotation operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /analyze:
+    post:
+      operationId: analyzeDrawing
+      tags: [annotations]
+      summary: Analyze a CAD drawing image
+      description: Accepts a base64-encoded image and returns parsed annotations with bounding boxes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyzeDrawingBody"
+      responses:
+        "200":
+          description: Analysis result with annotations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyzeDrawingResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +66,95 @@ components:
           type: string
       required:
         - status
-
+    AnalyzeDrawingBody:
+      type: object
+      properties:
+        imageData:
+          type: string
+          description: Base64-encoded image data (with data URI prefix)
+        includeDescription:
+          type: boolean
+          description: Whether to include a natural language description
+          default: false
+        baselineMode:
+          type: boolean
+          description: Whether to use baseline mode (simpler analysis)
+          default: false
+      required:
+        - imageData
+    BoundingBox:
+      type: object
+      properties:
+        x:
+          type: number
+          description: Left position as percentage of image width
+        y:
+          type: number
+          description: Top position as percentage of image height
+        width:
+          type: number
+          description: Width as percentage of image width
+        height:
+          type: number
+          description: Height as percentage of image height
+        color:
+          type: string
+          description: Color of the bounding box (e.g. "green", "blue", "red")
+      required:
+        - x
+        - y
+        - width
+        - height
+        - color
+    Annotation:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+          description: Short label for the annotation (e.g. "R3.2 TYP.")
+        value:
+          type: string
+          description: Numeric or text value extracted
+        view:
+          type: string
+          description: Which view this belongs to (e.g. "View 1")
+        boundingBox:
+          $ref: "#/components/schemas/BoundingBox"
+        description:
+          type: string
+          description: Optional detailed description
+      required:
+        - id
+        - label
+        - value
+        - view
+        - boundingBox
+    AnalyzeDrawingResult:
+      type: object
+      properties:
+        annotations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Annotation"
+        description:
+          type: string
+          description: Natural language description of the drawing (if requested)
+        views:
+          type: array
+          items:
+            type: string
+          description: List of detected views in the drawing
+      required:
+        - annotations
+        - views
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
