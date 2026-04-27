@@ -1,3 +1,17 @@
+/**
+ * API Server Build Script
+ *
+ * Uses ESBuild to bundle the Express server into a single ESM file.
+ * The output is written to `dist/index.mjs` with linked source maps.
+ *
+ * Key decisions:
+ * - Bundles everything into one file for simpler deployment
+ * - Externalises native modules and heavy SDKs that can't be bundled
+ * - Uses esbuild-plugin-pino to handle Pino's worker-based logging
+ * - Adds a CJS compatibility banner for packages like Express that use require()
+ *
+ * Run: `node ./build.mjs`
+ */
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -5,13 +19,15 @@ import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
 import { rm } from "node:fs/promises";
 
-// Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
+// Some plugins (e.g. esbuild-plugin-pino) use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
+
+  // Clean previous build output
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
@@ -22,11 +38,15 @@ async function buildAll() {
     outdir: distDir,
     outExtension: { ".js": ".mjs" },
     logLevel: "info",
-    // Some packages may not be bundleable, so we externalize them, we can add more here as needed.
-    // Some of the packages below may not be imported or installed, but we're adding them in case they are in the future.
-    // Examples of unbundleable packages:
-    // - uses native modules and loads them dynamically (e.g. sharp)
-    // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
+
+    /**
+     * Packages that cannot be bundled — typically because they:
+     * - Use native Node.js addons (*.node files)
+     * - Dynamically load sibling files at runtime
+     * - Are too large or complex for static analysis
+     *
+     * Add entries here if you encounter bundling errors with new dependencies.
+     */
     external: [
       "*.node",
       "sharp",
@@ -101,12 +121,21 @@ async function buildAll() {
       "puppeteer-core",
       "electron",
     ],
+
     sourcemap: "linked",
+
     plugins: [
-      // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
-      esbuildPluginPino({ transports: ["pino-pretty"] })
+      // Pino uses worker threads for logging — this plugin ensures the
+      // worker files are correctly resolved in the bundled output
+      esbuildPluginPino({ transports: ["pino-pretty"] }),
     ],
-    // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file
+
+    /**
+     * CJS compatibility banner.
+     * Express and some other packages are CommonJS-only. Since our output
+     * is ESM, we need to polyfill `require`, `__filename`, and `__dirname`
+     * so these packages work correctly in the bundled output.
+     */
     banner: {
       js: `import { createRequire as __bannerCrReq } from 'node:module';
 import __bannerPath from 'node:path';
@@ -121,6 +150,6 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
 }
 
 buildAll().catch((err) => {
-  console.error(err);
+  console.error("Build failed:", err);
   process.exit(1);
 });

@@ -1,5 +1,16 @@
+/**
+ * API Server Entry Point
+ *
+ * Validates required environment variables, then starts the Express HTTP
+ * server. Exits with code 1 on startup failure so process managers (systemd,
+ * Docker, etc.) can detect and restart the service.
+ */
 import app from "./app";
 import { logger } from "./lib/logger";
+
+/* -------------------------------------------------------------------------- */
+/*  Environment validation                                                     */
+/* -------------------------------------------------------------------------- */
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +25,10 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Start server                                                               */
+/* -------------------------------------------------------------------------- */
 
 app.listen(port, (err) => {
   if (err) {
