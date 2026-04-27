@@ -1,3 +1,11 @@
+/**
+ * Health Check Route
+ *
+ * Provides a lightweight endpoint for load balancers, orchestrators (K8s),
+ * and monitoring tools to verify the server is running and responsive.
+ *
+ * GET /api/healthz → { status: "ok" }
+ */
 import { Router, type IRouter } from "express";
 import { HealthCheckResponse } from "@workspace/api-zod";
 

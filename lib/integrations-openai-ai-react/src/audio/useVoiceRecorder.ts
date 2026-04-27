@@ -57,9 +57,10 @@ export function useVoiceRecorder() {
       }
 
       recorder.onstop = () => {
-        const blobType = mimeTypeRef.current ?? recorder.mimeType ?? "audio/webm";
+        const blobType =
+          mimeTypeRef.current ?? recorder.mimeType ?? "audio/webm";
         const blob = new Blob(chunksRef.current, { type: blobType });
-        recorder.stream.getTracks().forEach((t) => t.stop());
+        recorder.stream.getTracks().forEach((t: MediaStreamTrack) => t.stop());
         setState("stopped");
         resolve(blob);
       };
