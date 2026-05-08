@@ -72,3 +72,1153 @@ export const AnalyzeDrawingResponse = zod.object({
     .array(zod.string())
     .describe("List of detected views in the drawing"),
 });
+
+/**
+ * @summary Analyze a CAD drawing with GD&T compliance review
+ */
+export const analyzeDrawingGdtBodyIncludeDescriptionDefault = false;
+export const analyzeDrawingGdtBodyBaselineModeDefault = false;
+
+export const AnalyzeDrawingGdtBody = zod.object({
+  imageData: zod
+    .string()
+    .describe("Base64-encoded image data (with data URI prefix)"),
+  includeDescription: zod
+    .boolean()
+    .default(analyzeDrawingGdtBodyIncludeDescriptionDefault)
+    .describe("Whether to include a natural language description"),
+  baselineMode: zod
+    .boolean()
+    .default(analyzeDrawingGdtBodyBaselineModeDefault)
+    .describe("Whether to use baseline mode (simpler analysis)"),
+});
+
+export const analyzeDrawingGdtResponseAnnotationsItemOneOneConfidenceMin = 0;
+export const analyzeDrawingGdtResponseAnnotationsItemOneOneConfidenceMax = 1;
+
+export const analyzeDrawingGdtResponseAnnotationsItemOneOneNeedsReviewDefault = false;
+export const analyzeDrawingGdtResponseAnnotationsItemTwoOneConfidenceMin = 0;
+export const analyzeDrawingGdtResponseAnnotationsItemTwoOneConfidenceMax = 1;
+
+export const analyzeDrawingGdtResponseAnnotationsItemTwoOneNeedsReviewDefault = false;
+export const analyzeDrawingGdtResponseAnnotationsItemTwoTwoDatumReferencesMax = 3;
+
+export const analyzeDrawingGdtResponseAnnotationsItemThreeOneConfidenceMin = 0;
+export const analyzeDrawingGdtResponseAnnotationsItemThreeOneConfidenceMax = 1;
+
+export const analyzeDrawingGdtResponseAnnotationsItemThreeOneNeedsReviewDefault = false;
+export const analyzeDrawingGdtResponseAnnotationsItemThreeTwoDatumLetterRegExp =
+  new RegExp("^[A-Z]$");
+export const analyzeDrawingGdtResponseAnnotationsItemFourOneConfidenceMin = 0;
+export const analyzeDrawingGdtResponseAnnotationsItemFourOneConfidenceMax = 1;
+
+export const analyzeDrawingGdtResponseAnnotationsItemFourOneNeedsReviewDefault = false;
+export const analyzeDrawingGdtResponseAnnotationsItemFiveOneConfidenceMin = 0;
+export const analyzeDrawingGdtResponseAnnotationsItemFiveOneConfidenceMax = 1;
+
+export const analyzeDrawingGdtResponseAnnotationsItemFiveOneNeedsReviewDefault = false;
+
+export const AnalyzeDrawingGdtResponse = zod.object({
+  sessionId: zod.string(),
+  annotations: zod.array(
+    zod.union([
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(analyzeDrawingGdtResponseAnnotationsItemOneOneConfidenceMin)
+            .max(analyzeDrawingGdtResponseAnnotationsItemOneOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              analyzeDrawingGdtResponseAnnotationsItemOneOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("dimension"),
+            dimensionType: zod.enum([
+              "linear",
+              "angular",
+              "radius",
+              "diameter",
+            ]),
+            nominalValue: zod.number(),
+            plusTolerance: zod.number().optional(),
+            minusTolerance: zod.number().optional(),
+            unit: zod.string().optional(),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(analyzeDrawingGdtResponseAnnotationsItemTwoOneConfidenceMin)
+            .max(analyzeDrawingGdtResponseAnnotationsItemTwoOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              analyzeDrawingGdtResponseAnnotationsItemTwoOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("fcf"),
+            geometricCharacteristic: zod.enum([
+              "position",
+              "flatness",
+              "straightness",
+              "circularity",
+              "cylindricity",
+              "perpendicularity",
+              "parallelism",
+              "angularity",
+              "profileOfLine",
+              "profileOfSurface",
+              "circularRunout",
+              "totalRunout",
+              "symmetry",
+              "concentricity",
+            ]),
+            toleranceValue: zod.number(),
+            materialCondition: zod.enum(["MMC", "LMC", "RFS"]).nullish(),
+            datumReferences: zod
+              .array(zod.string())
+              .max(
+                analyzeDrawingGdtResponseAnnotationsItemTwoTwoDatumReferencesMax,
+              ),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(analyzeDrawingGdtResponseAnnotationsItemThreeOneConfidenceMin)
+            .max(analyzeDrawingGdtResponseAnnotationsItemThreeOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              analyzeDrawingGdtResponseAnnotationsItemThreeOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("datum"),
+            datumLetter: zod
+              .string()
+              .regex(
+                analyzeDrawingGdtResponseAnnotationsItemThreeTwoDatumLetterRegExp,
+              ),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(analyzeDrawingGdtResponseAnnotationsItemFourOneConfidenceMin)
+            .max(analyzeDrawingGdtResponseAnnotationsItemFourOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              analyzeDrawingGdtResponseAnnotationsItemFourOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("surface_finish"),
+            roughnessValue: zod.number(),
+            processNote: zod.string().optional(),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(analyzeDrawingGdtResponseAnnotationsItemFiveOneConfidenceMin)
+            .max(analyzeDrawingGdtResponseAnnotationsItemFiveOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              analyzeDrawingGdtResponseAnnotationsItemFiveOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("note"),
+          }),
+        ),
+    ]),
+  ),
+  complianceIssues: zod.array(
+    zod.object({
+      annotationId: zod.string(),
+      ruleId: zod.string(),
+      severity: zod.enum(["error", "warning"]),
+      description: zod.string(),
+    }),
+  ),
+  dfmFindings: zod.array(
+    zod.object({
+      id: zod.string(),
+      category: zod.enum([
+        "over_tolerancing",
+        "missing_tolerance",
+        "datum_scheme_completeness",
+        "surface_finish_consistency",
+        "general",
+      ]),
+      severity: zod.enum(["error", "warning", "info"]),
+      description: zod.string(),
+      recommendation: zod.string(),
+      relatedAnnotationIds: zod.array(zod.string()).optional(),
+    }),
+  ),
+  views: zod.array(zod.string()),
+  description: zod.string().optional(),
+  errors: zod
+    .array(
+      zod.object({
+        stage: zod.enum(["detection", "requery", "compliance", "dfm"]),
+        message: zod.string(),
+      }),
+    )
+    .optional(),
+});
+
+/**
+ * @summary Retrieve a saved analysis session
+ */
+export const GetSessionParams = zod.object({
+  sessionId: zod.coerce.string(),
+});
+
+export const getSessionResponseAnnotationsItemOneOneConfidenceMin = 0;
+export const getSessionResponseAnnotationsItemOneOneConfidenceMax = 1;
+
+export const getSessionResponseAnnotationsItemOneOneNeedsReviewDefault = false;
+export const getSessionResponseAnnotationsItemTwoOneConfidenceMin = 0;
+export const getSessionResponseAnnotationsItemTwoOneConfidenceMax = 1;
+
+export const getSessionResponseAnnotationsItemTwoOneNeedsReviewDefault = false;
+export const getSessionResponseAnnotationsItemTwoTwoDatumReferencesMax = 3;
+
+export const getSessionResponseAnnotationsItemThreeOneConfidenceMin = 0;
+export const getSessionResponseAnnotationsItemThreeOneConfidenceMax = 1;
+
+export const getSessionResponseAnnotationsItemThreeOneNeedsReviewDefault = false;
+export const getSessionResponseAnnotationsItemThreeTwoDatumLetterRegExp =
+  new RegExp("^[A-Z]$");
+export const getSessionResponseAnnotationsItemFourOneConfidenceMin = 0;
+export const getSessionResponseAnnotationsItemFourOneConfidenceMax = 1;
+
+export const getSessionResponseAnnotationsItemFourOneNeedsReviewDefault = false;
+export const getSessionResponseAnnotationsItemFiveOneConfidenceMin = 0;
+export const getSessionResponseAnnotationsItemFiveOneConfidenceMax = 1;
+
+export const getSessionResponseAnnotationsItemFiveOneNeedsReviewDefault = false;
+
+export const GetSessionResponse = zod.object({
+  sessionId: zod.string(),
+  annotations: zod.array(
+    zod.union([
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(getSessionResponseAnnotationsItemOneOneConfidenceMin)
+            .max(getSessionResponseAnnotationsItemOneOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(getSessionResponseAnnotationsItemOneOneNeedsReviewDefault),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("dimension"),
+            dimensionType: zod.enum([
+              "linear",
+              "angular",
+              "radius",
+              "diameter",
+            ]),
+            nominalValue: zod.number(),
+            plusTolerance: zod.number().optional(),
+            minusTolerance: zod.number().optional(),
+            unit: zod.string().optional(),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(getSessionResponseAnnotationsItemTwoOneConfidenceMin)
+            .max(getSessionResponseAnnotationsItemTwoOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(getSessionResponseAnnotationsItemTwoOneNeedsReviewDefault),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("fcf"),
+            geometricCharacteristic: zod.enum([
+              "position",
+              "flatness",
+              "straightness",
+              "circularity",
+              "cylindricity",
+              "perpendicularity",
+              "parallelism",
+              "angularity",
+              "profileOfLine",
+              "profileOfSurface",
+              "circularRunout",
+              "totalRunout",
+              "symmetry",
+              "concentricity",
+            ]),
+            toleranceValue: zod.number(),
+            materialCondition: zod.enum(["MMC", "LMC", "RFS"]).nullish(),
+            datumReferences: zod
+              .array(zod.string())
+              .max(getSessionResponseAnnotationsItemTwoTwoDatumReferencesMax),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(getSessionResponseAnnotationsItemThreeOneConfidenceMin)
+            .max(getSessionResponseAnnotationsItemThreeOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              getSessionResponseAnnotationsItemThreeOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("datum"),
+            datumLetter: zod
+              .string()
+              .regex(
+                getSessionResponseAnnotationsItemThreeTwoDatumLetterRegExp,
+              ),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(getSessionResponseAnnotationsItemFourOneConfidenceMin)
+            .max(getSessionResponseAnnotationsItemFourOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              getSessionResponseAnnotationsItemFourOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("surface_finish"),
+            roughnessValue: zod.number(),
+            processNote: zod.string().optional(),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(getSessionResponseAnnotationsItemFiveOneConfidenceMin)
+            .max(getSessionResponseAnnotationsItemFiveOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              getSessionResponseAnnotationsItemFiveOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("note"),
+          }),
+        ),
+    ]),
+  ),
+  complianceIssues: zod.array(
+    zod.object({
+      annotationId: zod.string(),
+      ruleId: zod.string(),
+      severity: zod.enum(["error", "warning"]),
+      description: zod.string(),
+    }),
+  ),
+  dfmFindings: zod.array(
+    zod.object({
+      id: zod.string(),
+      category: zod.enum([
+        "over_tolerancing",
+        "missing_tolerance",
+        "datum_scheme_completeness",
+        "surface_finish_consistency",
+        "general",
+      ]),
+      severity: zod.enum(["error", "warning", "info"]),
+      description: zod.string(),
+      recommendation: zod.string(),
+      relatedAnnotationIds: zod.array(zod.string()).optional(),
+    }),
+  ),
+  views: zod.array(zod.string()),
+  description: zod.string().optional(),
+  errors: zod
+    .array(
+      zod.object({
+        stage: zod.enum(["detection", "requery", "compliance", "dfm"]),
+        message: zod.string(),
+      }),
+    )
+    .optional(),
+});
+
+/**
+ * @summary Update an annotation and re-run compliance
+ */
+export const UpdateAnnotationParams = zod.object({
+  sessionId: zod.coerce.string(),
+  annotationId: zod.coerce.string(),
+});
+
+export const updateAnnotationBodyOneOneConfidenceMin = 0;
+export const updateAnnotationBodyOneOneConfidenceMax = 1;
+
+export const updateAnnotationBodyOneOneNeedsReviewDefault = false;
+export const updateAnnotationBodyTwoOneConfidenceMin = 0;
+export const updateAnnotationBodyTwoOneConfidenceMax = 1;
+
+export const updateAnnotationBodyTwoOneNeedsReviewDefault = false;
+export const updateAnnotationBodyTwoTwoDatumReferencesMax = 3;
+
+export const updateAnnotationBodyThreeOneConfidenceMin = 0;
+export const updateAnnotationBodyThreeOneConfidenceMax = 1;
+
+export const updateAnnotationBodyThreeOneNeedsReviewDefault = false;
+export const updateAnnotationBodyThreeTwoDatumLetterRegExp = new RegExp(
+  "^[A-Z]$",
+);
+export const updateAnnotationBodyFourOneConfidenceMin = 0;
+export const updateAnnotationBodyFourOneConfidenceMax = 1;
+
+export const updateAnnotationBodyFourOneNeedsReviewDefault = false;
+export const updateAnnotationBodyFiveOneConfidenceMin = 0;
+export const updateAnnotationBodyFiveOneConfidenceMax = 1;
+
+export const updateAnnotationBodyFiveOneNeedsReviewDefault = false;
+
+export const UpdateAnnotationBody = zod.union([
+  zod
+    .object({
+      id: zod.string(),
+      label: zod.string(),
+      value: zod.string(),
+      view: zod.string(),
+      boundingBox: zod.object({
+        x: zod.number().describe("Left position as percentage of image width"),
+        y: zod.number().describe("Top position as percentage of image height"),
+        width: zod.number().describe("Width as percentage of image width"),
+        height: zod.number().describe("Height as percentage of image height"),
+        color: zod
+          .string()
+          .describe(
+            'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+          ),
+      }),
+      description: zod.string().optional(),
+      confidence: zod
+        .number()
+        .min(updateAnnotationBodyOneOneConfidenceMin)
+        .max(updateAnnotationBodyOneOneConfidenceMax),
+      needsReview: zod
+        .boolean()
+        .default(updateAnnotationBodyOneOneNeedsReviewDefault),
+    })
+    .and(
+      zod.object({
+        type: zod.literal("dimension"),
+        dimensionType: zod.enum(["linear", "angular", "radius", "diameter"]),
+        nominalValue: zod.number(),
+        plusTolerance: zod.number().optional(),
+        minusTolerance: zod.number().optional(),
+        unit: zod.string().optional(),
+      }),
+    ),
+  zod
+    .object({
+      id: zod.string(),
+      label: zod.string(),
+      value: zod.string(),
+      view: zod.string(),
+      boundingBox: zod.object({
+        x: zod.number().describe("Left position as percentage of image width"),
+        y: zod.number().describe("Top position as percentage of image height"),
+        width: zod.number().describe("Width as percentage of image width"),
+        height: zod.number().describe("Height as percentage of image height"),
+        color: zod
+          .string()
+          .describe(
+            'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+          ),
+      }),
+      description: zod.string().optional(),
+      confidence: zod
+        .number()
+        .min(updateAnnotationBodyTwoOneConfidenceMin)
+        .max(updateAnnotationBodyTwoOneConfidenceMax),
+      needsReview: zod
+        .boolean()
+        .default(updateAnnotationBodyTwoOneNeedsReviewDefault),
+    })
+    .and(
+      zod.object({
+        type: zod.literal("fcf"),
+        geometricCharacteristic: zod.enum([
+          "position",
+          "flatness",
+          "straightness",
+          "circularity",
+          "cylindricity",
+          "perpendicularity",
+          "parallelism",
+          "angularity",
+          "profileOfLine",
+          "profileOfSurface",
+          "circularRunout",
+          "totalRunout",
+          "symmetry",
+          "concentricity",
+        ]),
+        toleranceValue: zod.number(),
+        materialCondition: zod.enum(["MMC", "LMC", "RFS"]).nullish(),
+        datumReferences: zod
+          .array(zod.string())
+          .max(updateAnnotationBodyTwoTwoDatumReferencesMax),
+      }),
+    ),
+  zod
+    .object({
+      id: zod.string(),
+      label: zod.string(),
+      value: zod.string(),
+      view: zod.string(),
+      boundingBox: zod.object({
+        x: zod.number().describe("Left position as percentage of image width"),
+        y: zod.number().describe("Top position as percentage of image height"),
+        width: zod.number().describe("Width as percentage of image width"),
+        height: zod.number().describe("Height as percentage of image height"),
+        color: zod
+          .string()
+          .describe(
+            'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+          ),
+      }),
+      description: zod.string().optional(),
+      confidence: zod
+        .number()
+        .min(updateAnnotationBodyThreeOneConfidenceMin)
+        .max(updateAnnotationBodyThreeOneConfidenceMax),
+      needsReview: zod
+        .boolean()
+        .default(updateAnnotationBodyThreeOneNeedsReviewDefault),
+    })
+    .and(
+      zod.object({
+        type: zod.literal("datum"),
+        datumLetter: zod
+          .string()
+          .regex(updateAnnotationBodyThreeTwoDatumLetterRegExp),
+      }),
+    ),
+  zod
+    .object({
+      id: zod.string(),
+      label: zod.string(),
+      value: zod.string(),
+      view: zod.string(),
+      boundingBox: zod.object({
+        x: zod.number().describe("Left position as percentage of image width"),
+        y: zod.number().describe("Top position as percentage of image height"),
+        width: zod.number().describe("Width as percentage of image width"),
+        height: zod.number().describe("Height as percentage of image height"),
+        color: zod
+          .string()
+          .describe(
+            'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+          ),
+      }),
+      description: zod.string().optional(),
+      confidence: zod
+        .number()
+        .min(updateAnnotationBodyFourOneConfidenceMin)
+        .max(updateAnnotationBodyFourOneConfidenceMax),
+      needsReview: zod
+        .boolean()
+        .default(updateAnnotationBodyFourOneNeedsReviewDefault),
+    })
+    .and(
+      zod.object({
+        type: zod.literal("surface_finish"),
+        roughnessValue: zod.number(),
+        processNote: zod.string().optional(),
+      }),
+    ),
+  zod
+    .object({
+      id: zod.string(),
+      label: zod.string(),
+      value: zod.string(),
+      view: zod.string(),
+      boundingBox: zod.object({
+        x: zod.number().describe("Left position as percentage of image width"),
+        y: zod.number().describe("Top position as percentage of image height"),
+        width: zod.number().describe("Width as percentage of image width"),
+        height: zod.number().describe("Height as percentage of image height"),
+        color: zod
+          .string()
+          .describe(
+            'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+          ),
+      }),
+      description: zod.string().optional(),
+      confidence: zod
+        .number()
+        .min(updateAnnotationBodyFiveOneConfidenceMin)
+        .max(updateAnnotationBodyFiveOneConfidenceMax),
+      needsReview: zod
+        .boolean()
+        .default(updateAnnotationBodyFiveOneNeedsReviewDefault),
+    })
+    .and(
+      zod.object({
+        type: zod.literal("note"),
+      }),
+    ),
+]);
+
+export const updateAnnotationResponseAnnotationsItemOneOneConfidenceMin = 0;
+export const updateAnnotationResponseAnnotationsItemOneOneConfidenceMax = 1;
+
+export const updateAnnotationResponseAnnotationsItemOneOneNeedsReviewDefault = false;
+export const updateAnnotationResponseAnnotationsItemTwoOneConfidenceMin = 0;
+export const updateAnnotationResponseAnnotationsItemTwoOneConfidenceMax = 1;
+
+export const updateAnnotationResponseAnnotationsItemTwoOneNeedsReviewDefault = false;
+export const updateAnnotationResponseAnnotationsItemTwoTwoDatumReferencesMax = 3;
+
+export const updateAnnotationResponseAnnotationsItemThreeOneConfidenceMin = 0;
+export const updateAnnotationResponseAnnotationsItemThreeOneConfidenceMax = 1;
+
+export const updateAnnotationResponseAnnotationsItemThreeOneNeedsReviewDefault = false;
+export const updateAnnotationResponseAnnotationsItemThreeTwoDatumLetterRegExp =
+  new RegExp("^[A-Z]$");
+export const updateAnnotationResponseAnnotationsItemFourOneConfidenceMin = 0;
+export const updateAnnotationResponseAnnotationsItemFourOneConfidenceMax = 1;
+
+export const updateAnnotationResponseAnnotationsItemFourOneNeedsReviewDefault = false;
+export const updateAnnotationResponseAnnotationsItemFiveOneConfidenceMin = 0;
+export const updateAnnotationResponseAnnotationsItemFiveOneConfidenceMax = 1;
+
+export const updateAnnotationResponseAnnotationsItemFiveOneNeedsReviewDefault = false;
+
+export const UpdateAnnotationResponse = zod.object({
+  sessionId: zod.string(),
+  annotations: zod.array(
+    zod.union([
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(updateAnnotationResponseAnnotationsItemOneOneConfidenceMin)
+            .max(updateAnnotationResponseAnnotationsItemOneOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              updateAnnotationResponseAnnotationsItemOneOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("dimension"),
+            dimensionType: zod.enum([
+              "linear",
+              "angular",
+              "radius",
+              "diameter",
+            ]),
+            nominalValue: zod.number(),
+            plusTolerance: zod.number().optional(),
+            minusTolerance: zod.number().optional(),
+            unit: zod.string().optional(),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(updateAnnotationResponseAnnotationsItemTwoOneConfidenceMin)
+            .max(updateAnnotationResponseAnnotationsItemTwoOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              updateAnnotationResponseAnnotationsItemTwoOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("fcf"),
+            geometricCharacteristic: zod.enum([
+              "position",
+              "flatness",
+              "straightness",
+              "circularity",
+              "cylindricity",
+              "perpendicularity",
+              "parallelism",
+              "angularity",
+              "profileOfLine",
+              "profileOfSurface",
+              "circularRunout",
+              "totalRunout",
+              "symmetry",
+              "concentricity",
+            ]),
+            toleranceValue: zod.number(),
+            materialCondition: zod.enum(["MMC", "LMC", "RFS"]).nullish(),
+            datumReferences: zod
+              .array(zod.string())
+              .max(
+                updateAnnotationResponseAnnotationsItemTwoTwoDatumReferencesMax,
+              ),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(updateAnnotationResponseAnnotationsItemThreeOneConfidenceMin)
+            .max(updateAnnotationResponseAnnotationsItemThreeOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              updateAnnotationResponseAnnotationsItemThreeOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("datum"),
+            datumLetter: zod
+              .string()
+              .regex(
+                updateAnnotationResponseAnnotationsItemThreeTwoDatumLetterRegExp,
+              ),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(updateAnnotationResponseAnnotationsItemFourOneConfidenceMin)
+            .max(updateAnnotationResponseAnnotationsItemFourOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              updateAnnotationResponseAnnotationsItemFourOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("surface_finish"),
+            roughnessValue: zod.number(),
+            processNote: zod.string().optional(),
+          }),
+        ),
+      zod
+        .object({
+          id: zod.string(),
+          label: zod.string(),
+          value: zod.string(),
+          view: zod.string(),
+          boundingBox: zod.object({
+            x: zod
+              .number()
+              .describe("Left position as percentage of image width"),
+            y: zod
+              .number()
+              .describe("Top position as percentage of image height"),
+            width: zod.number().describe("Width as percentage of image width"),
+            height: zod
+              .number()
+              .describe("Height as percentage of image height"),
+            color: zod
+              .string()
+              .describe(
+                'Color of the bounding box (e.g. \"green\", \"blue\", \"red\")',
+              ),
+          }),
+          description: zod.string().optional(),
+          confidence: zod
+            .number()
+            .min(updateAnnotationResponseAnnotationsItemFiveOneConfidenceMin)
+            .max(updateAnnotationResponseAnnotationsItemFiveOneConfidenceMax),
+          needsReview: zod
+            .boolean()
+            .default(
+              updateAnnotationResponseAnnotationsItemFiveOneNeedsReviewDefault,
+            ),
+        })
+        .and(
+          zod.object({
+            type: zod.literal("note"),
+          }),
+        ),
+    ]),
+  ),
+  complianceIssues: zod.array(
+    zod.object({
+      annotationId: zod.string(),
+      ruleId: zod.string(),
+      severity: zod.enum(["error", "warning"]),
+      description: zod.string(),
+    }),
+  ),
+  dfmFindings: zod.array(
+    zod.object({
+      id: zod.string(),
+      category: zod.enum([
+        "over_tolerancing",
+        "missing_tolerance",
+        "datum_scheme_completeness",
+        "surface_finish_consistency",
+        "general",
+      ]),
+      severity: zod.enum(["error", "warning", "info"]),
+      description: zod.string(),
+      recommendation: zod.string(),
+      relatedAnnotationIds: zod.array(zod.string()).optional(),
+    }),
+  ),
+  views: zod.array(zod.string()),
+  description: zod.string().optional(),
+  errors: zod
+    .array(
+      zod.object({
+        stage: zod.enum(["detection", "requery", "compliance", "dfm"]),
+        message: zod.string(),
+      }),
+    )
+    .optional(),
+});

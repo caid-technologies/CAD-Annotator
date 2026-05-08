@@ -7,6 +7,7 @@
  * - JSON body parsing with a 50 MB limit (needed for base64-encoded images)
  * - All API routes mounted under the `/api` prefix
  */
+import path from "node:path";
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
@@ -43,8 +44,19 @@ app.use(
   }),
 );
 
-/** Allow cross-origin requests. Tighten `origin` in production. */
-app.use(cors());
+/**
+ * CORS configuration.
+ * In production, restrict to the origin specified by CORS_ORIGIN.
+ * In development, allow all origins for convenience.
+ */
+const corsOrigin = process.env.CORS_ORIGIN;
+if (process.env.NODE_ENV === "production" && !corsOrigin) {
+  throw new Error(
+    "CORS_ORIGIN must be set in production. " +
+      "Set it to the URL of the frontend (e.g. https://example.com).",
+  );
+}
+app.use(cors({ origin: corsOrigin ?? true }));
 
 /**
  * Parse JSON request bodies up to 50 MB.
@@ -58,5 +70,21 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 /* -------------------------------------------------------------------------- */
 
 app.use("/api", router);
+
+/* -------------------------------------------------------------------------- */
+/*  Static File Serving (Production)                                           */
+/* -------------------------------------------------------------------------- */
+
+if (process.env.NODE_ENV === "production") {
+  const staticPath = path.resolve("artifacts/cad-annotator/dist/public");
+  app.use(express.static(staticPath));
+
+  // SPA fallback: serve index.html for non-API routes
+  app.get("*", (req, res) => {
+    if (!req.path.startsWith("/api")) {
+      res.sendFile(path.join(staticPath, "index.html"));
+    }
+  });
+}
 
 export default app;

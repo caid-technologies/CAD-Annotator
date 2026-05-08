@@ -16,6 +16,9 @@ node_modules/
 .env.local
 .env.*.local
 
+# Kiro (internal development specs and config)
+.kiro/
+
 # IDE and editor files
 .idea/
 .project
@@ -46,6 +49,11 @@ pnpm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# SQLite database (local dev fallback)
+cad-annotator.db
+cad-annotator.db-wal
+cad-annotator.db-shm
 
 # Lock files (pnpm only — enforced by preinstall hook)
 package-lock.json

@@ -13,6 +13,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
+import GdtAnalysis from "@/pages/GdtAnalysis";
 
 /**
  * Shared React Query client instance.
@@ -26,6 +27,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/gdt-analysis" component={GdtAnalysis} />
       <Route component={NotFound} />
     </Switch>
   );
