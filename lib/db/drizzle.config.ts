@@ -2,21 +2,30 @@
  * Drizzle Kit Configuration
  *
  * Used by `drizzle-kit push` to synchronise the database schema
- * with the TypeScript schema definitions in `./src/schema/`.
+ * with the TypeScript schema definitions.
+ *
+ * - When `DATABASE_URL` is set → pushes to PostgreSQL using `./src/schema/`
+ * - When `DATABASE_URL` is absent → pushes to SQLite (`cad-annotator.db`) using `./src/schema-sqlite/`
  */
 import { defineConfig } from "drizzle-kit";
 import path from "path";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Add it to your .env file (see .env.example).",
-  );
-}
+const isPostgres = !!process.env.DATABASE_URL;
 
-export default defineConfig({
-  schema: path.join(__dirname, "./src/schema/index.ts"),
-  dialect: "postgresql",
-  dbCredentials: {
-    url: process.env.DATABASE_URL,
-  },
-});
+export default defineConfig(
+  isPostgres
+    ? {
+        schema: path.join(__dirname, "./src/schema/index.ts"),
+        dialect: "postgresql",
+        dbCredentials: {
+          url: process.env.DATABASE_URL!,
+        },
+      }
+    : {
+        schema: path.join(__dirname, "./src/schema-sqlite/index.ts"),
+        dialect: "sqlite",
+        dbCredentials: {
+          url: "cad-annotator.db",
+        },
+      },
+);

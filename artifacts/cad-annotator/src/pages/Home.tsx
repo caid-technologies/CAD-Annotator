@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, X, Loader2, ImageIcon, Layers } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 import type {
   AnalyzeDrawingResult,
   Annotation,
@@ -195,6 +196,17 @@ export default function Home() {
             CAD Annotator
           </h1>
         </div>
+        <nav className="flex items-center gap-4">
+          <span className="text-sm font-medium text-foreground">
+            Basic Analysis
+          </span>
+          <Link
+            href="/gdt-analysis"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            GD&T Analysis
+          </Link>
+        </nav>
       </header>
 
       <main className="flex-1 px-8 pb-12 flex flex-col max-w-[1600px] mx-auto w-full">

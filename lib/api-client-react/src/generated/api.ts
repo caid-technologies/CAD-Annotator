@@ -19,7 +19,9 @@ import type {
 import type {
   AnalyzeDrawingBody,
   AnalyzeDrawingResult,
+  EnrichedAnnotation,
   ErrorResponse,
+  GdtAnalyzeResult,
   HealthStatus,
 } from "./api.schemas";
 
@@ -193,4 +195,291 @@ export const useAnalyzeDrawing = <
   TContext
 > => {
   return useMutation(getAnalyzeDrawingMutationOptions(options));
+};
+
+/**
+ * @summary Analyze a CAD drawing with GD&T compliance review
+ */
+export const getAnalyzeDrawingGdtUrl = () => {
+  return `/api/analyze/gdt`;
+};
+
+export const analyzeDrawingGdt = async (
+  analyzeDrawingBody: AnalyzeDrawingBody,
+  options?: RequestInit,
+): Promise<GdtAnalyzeResult> => {
+  return customFetch<GdtAnalyzeResult>(getAnalyzeDrawingGdtUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(analyzeDrawingBody),
+  });
+};
+
+export const getAnalyzeDrawingGdtMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeDrawingGdt>>,
+    TError,
+    { data: BodyType<AnalyzeDrawingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof analyzeDrawingGdt>>,
+  TError,
+  { data: BodyType<AnalyzeDrawingBody> },
+  TContext
+> => {
+  const mutationKey = ["analyzeDrawingGdt"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof analyzeDrawingGdt>>,
+    { data: BodyType<AnalyzeDrawingBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return analyzeDrawingGdt(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AnalyzeDrawingGdtMutationResult = NonNullable<
+  Awaited<ReturnType<typeof analyzeDrawingGdt>>
+>;
+export type AnalyzeDrawingGdtMutationBody = BodyType<AnalyzeDrawingBody>;
+export type AnalyzeDrawingGdtMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Analyze a CAD drawing with GD&T compliance review
+ */
+export const useAnalyzeDrawingGdt = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeDrawingGdt>>,
+    TError,
+    { data: BodyType<AnalyzeDrawingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof analyzeDrawingGdt>>,
+  TError,
+  { data: BodyType<AnalyzeDrawingBody> },
+  TContext
+> => {
+  return useMutation(getAnalyzeDrawingGdtMutationOptions(options));
+};
+
+/**
+ * @summary Retrieve a saved analysis session
+ */
+export const getGetSessionUrl = (sessionId: string) => {
+  return `/api/sessions/${sessionId}`;
+};
+
+export const getSession = async (
+  sessionId: string,
+  options?: RequestInit,
+): Promise<GdtAnalyzeResult> => {
+  return customFetch<GdtAnalyzeResult>(getGetSessionUrl(sessionId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSessionQueryKey = (sessionId: string) => {
+  return [`/api/sessions/${sessionId}`] as const;
+};
+
+export const getGetSessionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSession>>,
+  TError = ErrorType<unknown>,
+>(
+  sessionId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSession>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSessionQueryKey(sessionId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSession>>> = ({
+    signal,
+  }) => getSession(sessionId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!sessionId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSession>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSessionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSession>>
+>;
+export type GetSessionQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Retrieve a saved analysis session
+ */
+
+export function useGetSession<
+  TData = Awaited<ReturnType<typeof getSession>>,
+  TError = ErrorType<unknown>,
+>(
+  sessionId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSession>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSessionQueryOptions(sessionId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update an annotation and re-run compliance
+ */
+export const getUpdateAnnotationUrl = (
+  sessionId: string,
+  annotationId: string,
+) => {
+  return `/api/sessions/${sessionId}/annotations/${annotationId}`;
+};
+
+export const updateAnnotation = async (
+  sessionId: string,
+  annotationId: string,
+  enrichedAnnotation: EnrichedAnnotation,
+  options?: RequestInit,
+): Promise<GdtAnalyzeResult> => {
+  return customFetch<GdtAnalyzeResult>(
+    getUpdateAnnotationUrl(sessionId, annotationId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(enrichedAnnotation),
+    },
+  );
+};
+
+export const getUpdateAnnotationMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAnnotation>>,
+    TError,
+    {
+      sessionId: string;
+      annotationId: string;
+      data: BodyType<EnrichedAnnotation>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAnnotation>>,
+  TError,
+  {
+    sessionId: string;
+    annotationId: string;
+    data: BodyType<EnrichedAnnotation>;
+  },
+  TContext
+> => {
+  const mutationKey = ["updateAnnotation"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAnnotation>>,
+    {
+      sessionId: string;
+      annotationId: string;
+      data: BodyType<EnrichedAnnotation>;
+    }
+  > = (props) => {
+    const { sessionId, annotationId, data } = props ?? {};
+
+    return updateAnnotation(sessionId, annotationId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAnnotationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAnnotation>>
+>;
+export type UpdateAnnotationMutationBody = BodyType<EnrichedAnnotation>;
+export type UpdateAnnotationMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update an annotation and re-run compliance
+ */
+export const useUpdateAnnotation = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAnnotation>>,
+    TError,
+    {
+      sessionId: string;
+      annotationId: string;
+      data: BodyType<EnrichedAnnotation>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateAnnotation>>,
+  TError,
+  {
+    sessionId: string;
+    annotationId: string;
+    data: BodyType<EnrichedAnnotation>;
+  },
+  TContext
+> => {
+  return useMutation(getUpdateAnnotationMutationOptions(options));
 };

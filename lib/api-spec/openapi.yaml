@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: annotations
     description: CAD drawing annotation operations
+  - name: sessions
+    description: Analysis session operations
 paths:
   /healthz:
     get:
@@ -57,6 +59,71 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /analyze/gdt:
+    post:
+      operationId: analyzeDrawingGdt
+      tags: [annotations]
+      summary: Analyze a CAD drawing with GD&T compliance review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyzeDrawingBody"
+      responses:
+        "200":
+          description: GD&T analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GdtAnalyzeResult"
+  /sessions/{sessionId}:
+    get:
+      operationId: getSession
+      tags: [sessions]
+      summary: Retrieve a saved analysis session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Analysis session data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GdtAnalyzeResult"
+  /sessions/{sessionId}/annotations/{annotationId}:
+    patch:
+      operationId: updateAnnotation
+      tags: [sessions]
+      summary: Update an annotation and re-run compliance
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: annotationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnrichedAnnotation"
+      responses:
+        "200":
+          description: Updated session with re-validated compliance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GdtAnalyzeResult"
 components:
   schemas:
     HealthStatus:
@@ -158,3 +225,236 @@ components:
           type: string
       required:
         - error
+
+    AnnotationBase:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        value:
+          type: string
+        view:
+          type: string
+        boundingBox:
+          $ref: "#/components/schemas/BoundingBox"
+        description:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        needsReview:
+          type: boolean
+          default: false
+      required:
+        - id
+        - label
+        - value
+        - view
+        - boundingBox
+        - confidence
+
+    DimensionAnnotation:
+      allOf:
+        - $ref: "#/components/schemas/AnnotationBase"
+        - type: object
+          properties:
+            type:
+              type: string
+              const: "dimension"
+            dimensionType:
+              type: string
+              enum: [linear, angular, radius, diameter]
+            nominalValue:
+              type: number
+            plusTolerance:
+              type: number
+            minusTolerance:
+              type: number
+            unit:
+              type: string
+          required: [type, dimensionType, nominalValue]
+
+    FcfAnnotation:
+      allOf:
+        - $ref: "#/components/schemas/AnnotationBase"
+        - type: object
+          properties:
+            type:
+              type: string
+              const: "fcf"
+            geometricCharacteristic:
+              type: string
+              enum:
+                - position
+                - flatness
+                - straightness
+                - circularity
+                - cylindricity
+                - perpendicularity
+                - parallelism
+                - angularity
+                - profileOfLine
+                - profileOfSurface
+                - circularRunout
+                - totalRunout
+                - symmetry
+                - concentricity
+            toleranceValue:
+              type: number
+            materialCondition:
+              type: string
+              enum: [MMC, LMC, RFS]
+              nullable: true
+            datumReferences:
+              type: array
+              items:
+                type: string
+              maxItems: 3
+          required:
+            [type, geometricCharacteristic, toleranceValue, datumReferences]
+
+    DatumAnnotation:
+      allOf:
+        - $ref: "#/components/schemas/AnnotationBase"
+        - type: object
+          properties:
+            type:
+              type: string
+              const: "datum"
+            datumLetter:
+              type: string
+              pattern: "^[A-Z]$"
+          required: [type, datumLetter]
+
+    SurfaceFinishAnnotation:
+      allOf:
+        - $ref: "#/components/schemas/AnnotationBase"
+        - type: object
+          properties:
+            type:
+              type: string
+              const: "surface_finish"
+            roughnessValue:
+              type: number
+            processNote:
+              type: string
+          required: [type, roughnessValue]
+
+    NoteAnnotation:
+      allOf:
+        - $ref: "#/components/schemas/AnnotationBase"
+        - type: object
+          properties:
+            type:
+              type: string
+              const: "note"
+          required: [type]
+
+    EnrichedAnnotation:
+      type: object
+      discriminator:
+        propertyName: type
+      oneOf:
+        - $ref: "#/components/schemas/DimensionAnnotation"
+        - $ref: "#/components/schemas/FcfAnnotation"
+        - $ref: "#/components/schemas/DatumAnnotation"
+        - $ref: "#/components/schemas/SurfaceFinishAnnotation"
+        - $ref: "#/components/schemas/NoteAnnotation"
+
+    ComplianceIssue:
+      type: object
+      properties:
+        annotationId:
+          type: string
+        ruleId:
+          type: string
+        severity:
+          type: string
+          enum: [error, warning]
+        description:
+          type: string
+      required:
+        - annotationId
+        - ruleId
+        - severity
+        - description
+
+    DfmFinding:
+      type: object
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+          enum:
+            - over_tolerancing
+            - missing_tolerance
+            - datum_scheme_completeness
+            - surface_finish_consistency
+            - general
+        severity:
+          type: string
+          enum: [error, warning, info]
+        description:
+          type: string
+        recommendation:
+          type: string
+        relatedAnnotationIds:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - category
+        - severity
+        - description
+        - recommendation
+
+    StageError:
+      type: object
+      properties:
+        stage:
+          type: string
+          enum: [detection, requery, compliance, dfm]
+        message:
+          type: string
+      required:
+        - stage
+        - message
+
+    GdtAnalyzeResult:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        annotations:
+          type: array
+          items:
+            $ref: "#/components/schemas/EnrichedAnnotation"
+        complianceIssues:
+          type: array
+          items:
+            $ref: "#/components/schemas/ComplianceIssue"
+        dfmFindings:
+          type: array
+          items:
+            $ref: "#/components/schemas/DfmFinding"
+        views:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/StageError"
+      required:
+        - sessionId
+        - annotations
+        - complianceIssues
+        - dfmFindings
+        - views

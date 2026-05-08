@@ -6,3 +6,8 @@
  */
 export * from "./conversations";
 export * from "./messages";
+export * from "./analysis-sessions";
+export * from "./gdt-annotations";
+export * from "./compliance-issues";
+export * from "./dfm-findings";
+export * from "./annotation-edits";

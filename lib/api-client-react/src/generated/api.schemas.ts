@@ -56,3 +56,168 @@ export interface ErrorResponse {
   error: string;
   message?: string;
 }
+
+export interface AnnotationBase {
+  id: string;
+  label: string;
+  value: string;
+  view: string;
+  boundingBox: BoundingBox;
+  description?: string;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  confidence: number;
+  needsReview?: boolean;
+}
+
+export type DimensionAnnotationDimensionType =
+  (typeof DimensionAnnotationDimensionType)[keyof typeof DimensionAnnotationDimensionType];
+
+export const DimensionAnnotationDimensionType = {
+  linear: "linear",
+  angular: "angular",
+  radius: "radius",
+  diameter: "diameter",
+} as const;
+
+export type DimensionAnnotation = AnnotationBase & {
+  type: "dimension";
+  dimensionType: DimensionAnnotationDimensionType;
+  nominalValue: number;
+  plusTolerance?: number;
+  minusTolerance?: number;
+  unit?: string;
+};
+
+export type FcfAnnotationGeometricCharacteristic =
+  (typeof FcfAnnotationGeometricCharacteristic)[keyof typeof FcfAnnotationGeometricCharacteristic];
+
+export const FcfAnnotationGeometricCharacteristic = {
+  position: "position",
+  flatness: "flatness",
+  straightness: "straightness",
+  circularity: "circularity",
+  cylindricity: "cylindricity",
+  perpendicularity: "perpendicularity",
+  parallelism: "parallelism",
+  angularity: "angularity",
+  profileOfLine: "profileOfLine",
+  profileOfSurface: "profileOfSurface",
+  circularRunout: "circularRunout",
+  totalRunout: "totalRunout",
+  symmetry: "symmetry",
+  concentricity: "concentricity",
+} as const;
+
+export type FcfAnnotationMaterialCondition =
+  | (typeof FcfAnnotationMaterialCondition)[keyof typeof FcfAnnotationMaterialCondition]
+  | null;
+
+export const FcfAnnotationMaterialCondition = {
+  MMC: "MMC",
+  LMC: "LMC",
+  RFS: "RFS",
+} as const;
+
+export type FcfAnnotation = AnnotationBase & {
+  type: "fcf";
+  geometricCharacteristic: FcfAnnotationGeometricCharacteristic;
+  toleranceValue: number;
+  materialCondition?: FcfAnnotationMaterialCondition;
+  /** @maxItems 3 */
+  datumReferences: string[];
+};
+
+export type DatumAnnotation = AnnotationBase & {
+  type: "datum";
+  /** @pattern ^[A-Z]$ */
+  datumLetter: string;
+};
+
+export type SurfaceFinishAnnotation = AnnotationBase & {
+  type: "surface_finish";
+  roughnessValue: number;
+  processNote?: string;
+};
+
+export type NoteAnnotation = AnnotationBase & {
+  type: "note";
+};
+
+export type EnrichedAnnotation =
+  | DimensionAnnotation
+  | FcfAnnotation
+  | DatumAnnotation
+  | SurfaceFinishAnnotation
+  | NoteAnnotation;
+
+export type ComplianceIssueSeverity =
+  (typeof ComplianceIssueSeverity)[keyof typeof ComplianceIssueSeverity];
+
+export const ComplianceIssueSeverity = {
+  error: "error",
+  warning: "warning",
+} as const;
+
+export interface ComplianceIssue {
+  annotationId: string;
+  ruleId: string;
+  severity: ComplianceIssueSeverity;
+  description: string;
+}
+
+export type DfmFindingCategory =
+  (typeof DfmFindingCategory)[keyof typeof DfmFindingCategory];
+
+export const DfmFindingCategory = {
+  over_tolerancing: "over_tolerancing",
+  missing_tolerance: "missing_tolerance",
+  datum_scheme_completeness: "datum_scheme_completeness",
+  surface_finish_consistency: "surface_finish_consistency",
+  general: "general",
+} as const;
+
+export type DfmFindingSeverity =
+  (typeof DfmFindingSeverity)[keyof typeof DfmFindingSeverity];
+
+export const DfmFindingSeverity = {
+  error: "error",
+  warning: "warning",
+  info: "info",
+} as const;
+
+export interface DfmFinding {
+  id: string;
+  category: DfmFindingCategory;
+  severity: DfmFindingSeverity;
+  description: string;
+  recommendation: string;
+  relatedAnnotationIds?: string[];
+}
+
+export type StageErrorStage =
+  (typeof StageErrorStage)[keyof typeof StageErrorStage];
+
+export const StageErrorStage = {
+  detection: "detection",
+  requery: "requery",
+  compliance: "compliance",
+  dfm: "dfm",
+} as const;
+
+export interface StageError {
+  stage: StageErrorStage;
+  message: string;
+}
+
+export interface GdtAnalyzeResult {
+  sessionId: string;
+  annotations: EnrichedAnnotation[];
+  complianceIssues: ComplianceIssue[];
+  dfmFindings: DfmFinding[];
+  views: string[];
+  description?: string;
+  errors?: StageError[];
+}
