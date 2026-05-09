@@ -22,6 +22,13 @@ if (Number.isNaN(port) || port <= 0) {
 /** URL base path — defaults to "/" for standard deployments. */
 const basePath = process.env.BASE_PATH || "/";
 
+/**
+ * Local API target used by the dev server proxy.
+ * Keep frontend requests same-origin during development by forwarding `/api`
+ * to the separately running API server.
+ */
+const apiProxyTarget = process.env.API_PROXY_TARGET || "http://127.0.0.1:8080";
+
 /* -------------------------------------------------------------------------- */
 /*  Vite config                                                                */
 /* -------------------------------------------------------------------------- */
@@ -60,6 +67,12 @@ export default defineConfig({
     host: "0.0.0.0",
     allowedHosts: true,
     fs: { strict: true },
+    proxy: {
+      "/api": {
+        target: apiProxyTarget,
+        changeOrigin: true,
+      },
+    },
   },
 
   preview: {

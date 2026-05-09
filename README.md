@@ -76,6 +76,10 @@ Copy the example environment file and fill in your values:
 cp .env.example .env
 ```
 
+The API server reads the workspace root `.env` automatically when you use the
+package scripts below. The frontend keeps its own dev defaults (port `5173`,
+base path `/`) unless you add an artifact-local `.env` file.
+
 Required variables:
 
 | Variable                          | Description                                                                                   |
@@ -115,6 +119,11 @@ pnpm --filter @workspace/api-server run dev
 # Terminal 2: Frontend
 pnpm --filter @workspace/cad-annotator run dev
 ```
+
+In local development, the Vite dev server proxies `/api` requests to
+`http://127.0.0.1:8080` by default, so the frontend works against the API
+server without extra client configuration. Override that target with
+`API_PROXY_TARGET` if your API is running elsewhere.
 
 ### 5. Build for production
 

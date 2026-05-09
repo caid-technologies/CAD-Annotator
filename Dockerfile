@@ -12,8 +12,8 @@
 # ---------------------------------------------------------------------------
 FROM node:24-slim AS base
 
-# Disable corepack (root package.json has a packageManager field for npm,
-# but the workspace uses pnpm — installing pnpm directly avoids conflicts)
+# Disable corepack and install pnpm explicitly so container builds use the
+# same package manager as the workspace regardless of the base image defaults.
 ENV COREPACK_ENABLE_STRICT=0
 RUN corepack disable && npm install -g pnpm@latest
 
