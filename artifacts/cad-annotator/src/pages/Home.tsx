@@ -193,7 +193,7 @@ export default function Home() {
             <Layers className="w-4 h-4 text-primary" />
           </div>
           <h1 className="text-lg font-medium tracking-tight text-foreground">
-            CAD Annotator
+            Caid Annotator
           </h1>
         </div>
         <nav className="flex items-center gap-4">
